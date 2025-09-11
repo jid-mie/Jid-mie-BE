@@ -1,14 +1,17 @@
-  const passport = require('passport');
+    const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// Build an absolute callback URL so it matches the redirect URIs you register
+const backendBase = process.env.BACKEND_URL || process.env.API_BASE_URL || 'http://localhost:3001';
+
 // --- CẤU HÌNH GOOGLE STRATEGY ---
 passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/api/auth/google/callback"
+        callbackURL: `${backendBase}/api/auth/google/callback`
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -49,7 +52,7 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
         clientID: process.env.FACEBOOK_APP_ID,
         clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: "/api/auth/facebook/callback",
+        callbackURL: `${backendBase}/api/auth/facebook/callback`,
         profileFields: ['id', 'displayName', 'emails']
     },
     async (accessToken, refreshToken, profile, done) => {
