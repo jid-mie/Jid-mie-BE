@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const { getTripConfigs, updateTripConfig, getTripConfigById, deleteTripConfig } = require('../controllers/tripConfigController'); // Added tripConfigController
 const authMiddleware = require('../middleware/auth');
 
 // Apply auth middleware to all admin routes
@@ -31,5 +32,10 @@ router.route('/redirects')
 
 router.route('/redirects/:id')
     .delete(adminController.deleteRedirect);
+
+// --- Trip Configurations ---
+router.route('/configs')
+    .get(getTripConfigs)
+    .post(updateTripConfig);
 
 module.exports = router;

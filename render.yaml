@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: jid-mie-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free # Gói miễn phí
+    healthCheckPath: /api
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false # Render sẽ hỏi bạn nhập giá trị này trên Dashboard (Lấy từ MongoDB Atlas)
+      - key: JWT_SECRET
+        sync: false # Render sẽ hỏi (Nhập chuỗi bí mật bất kỳ)
+      - key: SESSION_SECRET
+        sync: false # Render sẽ hỏi
+      - key: CLIENT_URL
+        sync: false # Link Frontend (Ví dụ: https://jid-mie-booking.vercel.app)
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_User
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: VNP_TMN_CODE
+        sync: false
+      - key: VNP_HASH_SECRET
+        sync: false

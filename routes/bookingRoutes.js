@@ -9,6 +9,7 @@ const {
 } = require('../controllers/bookingController');
 const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/adminMiddleware');
+const { createBookingValidator } = require('../validators/bookingValidator');
 
 // --- CẤU TRÚC ROUTE THEO CHUẨN RESTFUL ---
 
@@ -17,8 +18,11 @@ router.use(protect);
 
 // Route cho /api/bookings
 router.route('/')
-    .post(createBooking)    // POST /api/bookings
+    .post(createBookingValidator, createBooking)    // POST /api/bookings
     .get(getMyBookings);     // GET /api/bookings
+
+// Backward-compatible route for /api/bookings/my-bookings
+router.get('/my-bookings', getMyBookings);
 
 // Route cho /api/bookings/:id
 router.route('/:id')

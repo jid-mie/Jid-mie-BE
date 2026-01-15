@@ -7,12 +7,11 @@ const notFound = (req, res, next) => {
 
 // Middleware xử lý lỗi tập trung
 const errorHandler = (err, req, res, next) => {
-    // Đôi khi lỗi có thể có status code 200, cần chuyển nó về 500
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
+
     res.status(statusCode);
     res.json({
         message: err.message,
-        // Chỉ hiển thị stack trace khi đang ở môi trường phát triển
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });
 };

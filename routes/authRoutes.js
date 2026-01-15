@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const { registerUser, loginUser } = require('../controllers/authController');
-const { registerValidationRules, loginValidationRules, validate } = require('../middleware/validationMiddleware');
+const { registerUser, loginUser, refreshToken } = require('../controllers/authController');
+const { registerValidator, loginValidator } = require('../validators/authValidator');
 
 // --- Các route đăng nhập/đăng ký bằng email ---
-router.post('/register' , registerValidationRules(), validate, registerUser);
-router.post('/login', loginValidationRules(), validate, loginUser);
+router.post('/register', registerValidator, registerUser);
+router.post('/login', loginValidator, loginUser);
+router.post('/refresh', refreshToken); // <-- Route làm mới token
 
 // --- Route xác thực với Google ---
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

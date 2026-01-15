@@ -3,6 +3,10 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const passport = require('passport');
+const helmet = require('helmet'); // Security headers
+const morgan = require('morgan'); // Logging
+const swaggerUi = require('swagger-ui-express'); // Swagger UI
+const swaggerSpecs = require('./config/swagger'); // Swagger Specs
 require('dotenv').config();
 require('./config/passport');
 
@@ -19,11 +23,26 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const app = express();
 
 // --- MIDDLEWARES ---
-app.use(cors());
+app.use(helmet()); // Security Headers
+app.use(morgan('dev')); // Logger
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json());
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 200 });
-app.use(limiter);
+
+// Rate Limiting: 100 req / 15 min
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use('/api', limiter); // Apply to API routes only
+
 app.use(express.static('public'));
+
+// Documentation Route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // --- PASSPORT INITIALIZATION ---
 app.use(session({
