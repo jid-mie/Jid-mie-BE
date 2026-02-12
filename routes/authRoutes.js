@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const jwt = require('jsonwebtoken');
 const { registerUser, loginUser, refreshToken } = require('../controllers/authController');
 const { registerValidator, loginValidator } = require('../validators/authValidator');
+const authService = require('../services/authService'); // Import authService
 
 // --- Các route đăng nhập/đăng ký bằng email ---
 router.post('/register', registerValidator, registerUser);
@@ -14,25 +14,34 @@ router.post('/refresh', refreshToken); // <-- Route làm mới token
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // --- Route Callback từ Google ---
-// Đây là nơi xử lý điều hướng sau khi Google xác thực thành công
 router.get('/google/callback',
     passport.authenticate('google', {
-        failureRedirect: `${process.env.FRONTEND_URL}/login`, // Nếu lỗi, về trang login của frontend
+        failureRedirect: `${process.env.FRONTEND_URL}/login`,
         session: false
     }),
     (req, res) => {
-        // 1. Tạo JWT Token cho người dùng đã được xác thực
-        const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        // 1. Tạo JWT Token chuẩn (15m) & Refresh Token
+        const token = authService.generateToken(req.user._id);
+        const refreshToken = authService.generateRefreshToken(req.user._id);
 
-        // 2. Chuẩn bị thông tin người dùng để gửi về frontend
-        const userString = encodeURIComponent(JSON.stringify({
+        // 2. Chuẩn bị dữ liệu để gửi về frontend qua Cookie (Transport Cookie)
+        const transportData = JSON.stringify({
+            token,
+            refreshToken,
             name: req.user.name,
             email: req.user.email
-        }));
+        });
 
-        // 3. Điều hướng trình duyệt của người dùng về trang callback của frontend
-        //    kèm theo token và thông tin người dùng trên URL
-        res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${userString}`);
+        // 3. Đặt Cookie ngắn hạn (15s) để chuyển dữ liệu an toàn
+        res.cookie('auth_transport', transportData, {
+            maxAge: 15 * 1000,
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+
+        // 4. Điều hướng về trang callback của frontend
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`);
     }
 );
 
@@ -46,12 +55,26 @@ router.get('/facebook/callback',
         session: false
     }),
     (req, res) => {
-        // Logic tương tự như Google
-        const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-        const userString = encodeURIComponent(JSON.stringify({ name: req.user.name, email: req.user.email }));
-        res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${userString}`);
+        // Logic tương tự Google
+        const token = authService.generateToken(req.user._id);
+        const refreshToken = authService.generateRefreshToken(req.user._id);
+
+        const transportData = JSON.stringify({
+            token,
+            refreshToken,
+            name: req.user.name,
+            email: req.user.email
+        });
+
+        res.cookie('auth_transport', transportData, {
+            maxAge: 15 * 1000,
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`);
     }
 );
 
 module.exports = router;
-

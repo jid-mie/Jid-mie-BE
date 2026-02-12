@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
 
 const generateRefreshToken = (id) => {
@@ -58,7 +58,7 @@ const refreshAccessToken = async (refreshToken) => {
             throw new AppError(401, 'Người dùng không tồn tại');
         }
 
-        // Cấp lại Access Token mới (10 phút)
+        // Cấp lại Access Token mới (15 phút)
         const newAccessToken = generateToken(user._id);
         return { token: newAccessToken };
     } catch (error) {
@@ -69,5 +69,7 @@ const refreshAccessToken = async (refreshToken) => {
 module.exports = {
     registerUser,
     loginUser,
-    refreshAccessToken
+    refreshAccessToken,
+    generateRefreshToken, // Exporting this
+    generateToken // Exporting this as well might be useful
 };
